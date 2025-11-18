@@ -15,7 +15,7 @@ class MedicationTiming(MedicationTimingBase):
   medication_id: int
 
   class Config:
-    orm_mode = True
+    from_attributes = True
 
 # Medicationのスキーマ
 class MedicationBase(BaseModel):
@@ -33,7 +33,7 @@ class Medication(MedicationBase):
   timings: List[MedicationTiming] = []
 
   class Config:
-    orm_mode = True
+    from_attributes = True
 
 # ユーザーのスキーマ
 class UserBase(BaseModel):
@@ -47,4 +47,4 @@ class User(UserBase):
   user_id: int
 
   class Config:
-    orm_mode = True
+    from_attributes = True

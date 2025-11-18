@@ -26,7 +26,7 @@ class Medication(Base):
 
   # リレーション
   owner = relationship("User", back_populates="medications")
-  timings = relationship("MedicatonTiming", back_populates="medication")
+  timings = relationship("MedicationTiming", back_populates="medication")
 
 # 服薬時刻テーブル
 class MedicationTiming(Base):
