@@ -18,9 +18,19 @@
 
       <div v-else class="medication-grid">
         <article v-for="med in medications" :key="med.medication_id" class="med-card">
-          <header>
-            <h3>{{ med.name }}</h3>
-            <p class="dosage">量: {{ med.dosage }}</p>
+          <header class="med-card-header">
+            <div>
+              <h3>{{ med.name }}</h3>
+              <p class="dosage">量: {{ med.dosage }}</p>
+            </div>
+            <button
+              type="button"
+              class="icon-action"
+              @click.stop="deleteMedication(med.medication_id)"
+              aria-label="薬を削除"
+            >
+              <i class="ti ti-trash"></i>
+            </button>
           </header>
 
           <p class="memo" v-if="med.memo">{{ med.memo }}</p>
@@ -162,6 +172,33 @@ const recordIntake = async (medicationId: number, timingId: number) => {
   }
 };
 
+const deleteMedication = async (medicationId: number) => {
+  if (!confirm('この薬を完全に削除しますか？')) {
+    return;
+  }
+
+  const userId = localStorage.getItem('user_id');
+  const token = localStorage.getItem('token');
+
+  if (!userId || !token) {
+    alert('ログインが必要です');
+    router.push('/login');
+    return;
+  }
+
+  try {
+    await axios.delete(`http://127.0.0.1:8000/users/${userId}/medications/${medicationId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    medications.value = medications.value.filter((med) => med.medication_id !== medicationId);
+    todayRecords.value = todayRecords.value.filter((record) => record.medication_id !== medicationId);
+    alert('薬を削除しました');
+  } catch (error) {
+    console.error(error);
+    alert('削除に失敗しました');
+  }
+};
+
 const addMedication = () => {
   router.push('/medications/add');
 };
@@ -246,6 +283,32 @@ const addMedication = () => {
   flex-direction: column;
   gap: 0.6rem;
   min-height: 160px;
+}
+
+.med-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.icon-action {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(84, 101, 149, 0.4);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #c81d25;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.icon-action:hover {
+  background: rgba(200, 29, 37, 0.08);
+  border-color: rgba(200, 29, 37, 0.6);
 }
 
 .med-card header h3 {
