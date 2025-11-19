@@ -8,8 +8,6 @@
           予定された服用時間を見ながら、次に飲む薬をすぐに確認できます。
         </p>
       </div>
-
-      <button class="add-new-button primary" @click="addMedication">新規追加</button>
     </header>
 
     <section class="medication-board">
@@ -36,7 +34,7 @@
       </div>
     </section>
 
-    <button class="add-new-button secondary" @click="addMedication">＋ 服薬を追加する</button>
+    <button class="add-new-button" @click="addMedication">＋ 服薬を追加する</button>
   </div>
 </template>
 
@@ -84,7 +82,7 @@ onMounted(async () => {
 });
 
 const addMedication = () => {
-  // TODO: Link to medication creation flow
+  router.push('/medications/add')
 };
 </script>
 
@@ -103,8 +101,8 @@ const addMedication = () => {
   width: min(1100px, 100%);
   margin: 0 auto;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 1rem;
   padding: 1.5rem;
   border-radius: 20px;
@@ -216,12 +214,7 @@ const addMedication = () => {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.add-new-button.primary {
-  background: #f69a2b;
-  color: #fff;
-}
-
-.add-new-button.secondary {
+.add-new-button {
   background: #1f2f4f;
   color: #fff;
   box-shadow: 0 10px 22px rgba(31, 47, 79, 0.25);
@@ -238,9 +231,6 @@ const addMedication = () => {
     align-items: flex-start;
   }
 
-  .add-new-button.primary {
-    align-self: stretch;
-  }
 }
 
 @media (max-width: 640px) {
