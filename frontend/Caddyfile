@@ -1,0 +1,7 @@
+:80
+
+@backend path /token /users* /medications* /records*
+reverse_proxy @backend backend:8000
+
+root * /srv
+file_server
