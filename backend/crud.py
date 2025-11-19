@@ -77,5 +77,20 @@ def get_today_intake_records(db: Session, user_id: int):
   today = date.today()
   return get_intake_records(db=db, user_id=user_id, target_date=today)
 
+def delete_medication(db: Session, medication_id: int, user_id: int):
+  medication = db.query(models.Medication).filter(
+    models.Medication.medication_id == medication_id,
+    models.Medication.user_id == user_id
+  ).first()
+
+  if not medication:
+    return False
+
+  db.query(models.IntakeRecord).filter(models.IntakeRecord.medication_id == medication_id).delete()
+  db.query(models.MedicationTiming).filter(models.MedicationTiming.medication_id == medication_id).delete()
+  db.delete(medication)
+  db.commit()
+  return True
+
 def get_user_by_email(db: Session, email: str):
   return db.query(models.User).filter(models.User.email == email).first()

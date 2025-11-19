@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, sessionmaker
@@ -104,6 +104,22 @@ def list_intake_records(
 @app.get("/users/{user_id}/records/today", response_model=List[schemas.IntakeRecord])
 def list_today_records(user_id: int, db: Session = Depends(get_db)):
   return crud.get_today_intake_records(db=db, user_id=user_id)
+
+
+@app.delete("/users/{user_id}/medications/{medication_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_medication(user_id: int, medication_id: int, db: Session = Depends(get_db)):
+  success = crud.delete_medication(db=db, medication_id=medication_id, user_id=user_id)
+
+  if not success:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail="指定した薬が見つかりません"
+    )
+
+
+@app.options("/users/")
+def users_options():
+  return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 # ログインAPI
 @app.post("/token", response_model=dict)
