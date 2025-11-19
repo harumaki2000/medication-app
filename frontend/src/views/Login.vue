@@ -20,13 +20,27 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 
-const login = () => {
-  alert('ログイン処理')
+const login = async () => {
+  try {
+    const params = new URLSearchParams()
+    params.append('username', email.value)
+    params.append('password', password.value)
+
+    const response = await axios.post('http://127.0.0.1:8000/token', params)
+
+    localStorage.setItem('token', response.data.access_token)
+
+    router.push('/register')
+  } catch (error) {
+    console.error(error)
+    alert('ログイン失敗: メールアドレスかパスワードが間違っています')
+  }
 }
 
 const goToRegister = () => {
