@@ -37,8 +37,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
+
+import apiClient from '../lib/apiClient';
 
 const router = useRouter();
 const email = ref('');
@@ -53,7 +54,7 @@ const registerUser = async () => {
   }
 
   try {
-    const response = await axios.post('http://127.0.0.1:8000/users/', {
+    const response = await apiClient.post('/users/', {
       email: email.value,
       username: username.value,
       password: password.value

@@ -1,16 +1,27 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Response
-from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy import create_engine
-from typing import List, Optional
+import os
 from datetime import timedelta, datetime
+from typing import List, Optional
 
-import crud, models, schemas, auth
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI, HTTPException, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
+import auth
+import crud
+import models
+import schemas
+
+load_dotenv()
 
 # DB設定
-DATABASE_URL = "sqlite:///./medication_app.db"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./medication_app.db")
+engine = create_engine(
+  DATABASE_URL,
+  connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # テーブル作成
@@ -18,13 +29,18 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-origins = [
+origins_env = os.getenv("ALLOWED_ORIGINS")
+default_origins = [
   "http://localhost",
   "http://localhost:80",
   "http://localhost:5173",
   "http://127.0.0.1",
   "http://127.0.0.1:8000",
 ]
+origins = [
+  origin.strip() for origin in origins_env.split(",")
+  if origin.strip()
+] if origins_env else default_origins
 
 app.add_middleware(
   CORSMiddleware,
