@@ -1,19 +1,28 @@
 <template>
-  <div class="card">
-    <h1>ログイン</h1>
+  <div class="auth-page">
+    <div class="auth-card">
+      <header class="auth-header">
+        <h1>ログイン</h1>
+        <p class="description">毎日の服薬予定を記録して、飲み忘れを減らしましょう。</p>
+      </header>
 
-    <div class="form-group">
-      <label for="email">メールアドレス</label>
-      <input type="email" id="email" v-model="email"/>
+      <div class="form-grid">
+        <label class="form-field" for="email">
+          <span>メールアドレス</span>
+          <input type="email" id="email" v-model="email" autocomplete="username" />
+        </label>
+
+        <label class="form-field" for="password">
+          <span>パスワード</span>
+          <input type="password" id="password" v-model="password" autocomplete="current-password" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button class="primary-button" @click="login">ログイン</button>
+        <button class="text-button" @click="goToRegister">新規登録はこちら</button>
+      </div>
     </div>
-
-    <div class="form-group">
-      <label for="password">パスワード</label>
-      <input type="password" id="password" v-model="password"/>
-    </div>
-
-    <button class="primary-button" @click="login">ログイン</button>
-    <button class="secondary-button" @click="goToRegister">新規登録</button>
   </div>
 </template>
 
@@ -22,113 +31,151 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 
-const router = useRouter()
-const email = ref('')
-const password = ref('')
+const router = useRouter();
+const email = ref('');
+const password = ref('');
 
 const login = async () => {
   try {
-    const params = new URLSearchParams()
-    params.append('username', email.value)
-    params.append('password', password.value)
+    const params = new URLSearchParams();
+    params.append('username', email.value);
+    params.append('password', password.value);
 
-    const response = await axios.post('http://127.0.0.1:8000/token', params)
+    const response = await axios.post('http://127.0.0.1:8000/token', params);
 
-    localStorage.setItem('token', response.data.access_token)
+    localStorage.setItem('token', response.data.access_token);
+    localStorage.setItem('user_id', response.data.user_id);
 
-    router.push('/register')
+    router.push('/dashboard');
   } catch (error) {
-    console.error(error)
-    alert('ログイン失敗: メールアドレスかパスワードが間違っています')
+    console.error(error);
+    alert('ログイン失敗: メールアドレスかパスワードが間違っています');
   }
-}
+};
 
 const goToRegister = () => {
-  router.push('/register')
-}
+  router.push('/register');
+};
 </script>
 
 <style scoped>
-body {
-  font-family: 'Arial', sans-serif;
-  background-color: #f0f2f5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.auth-page {
   min-height: 100vh;
-  margin: 0;
+  background: #f7f8fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  box-sizing: border-box;
 }
 
-.container {
-  max-width: 400px;
-  width: 100%;
-  padding: 30px;
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.auth-card {
+  width: min(420px, 100%);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.auth-header {
   text-align: center;
 }
 
-h1 {
-  color: #333;
-  margin-bottom: 30px;
-  font-size: 24px;
+.auth-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #1f2b3a;
 }
 
-.form-group {
-  margin-bottom: 20px;
-  text-align: left;
+.description {
+  margin: 0.4rem 0 0;
+  font-size: 0.95rem;
+  color: #4c5566;
 }
 
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-  color: #555;
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"] {
-  width: calc(100% - 20px);
-  padding: 10px;
-  border: 1px solid #555;
-  border-radius: 5px;
-  font-size: 16px;
+.form-field {
+  font-weight: 600;
+  color: #344058;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
-input:focus {
-  border-color: #007bff;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+.form-field span {
+  font-size: 0.95rem;
 }
 
-button {
+.form-field input {
   width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 5px;
-  font-size: 18px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-top: 10px;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(52, 64, 88, 0.3);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-field input:focus {
+  border-color: rgba(52, 64, 88, 0.8);
+  box-shadow: 0 0 0 3px rgba(52, 64, 88, 0.15);
+  outline: none;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .primary-button {
-  background-color: #e0e0e0;
-  color: #333;
+  width: 100%;
+  padding: 0.95rem 1rem;
+  font-size: 1rem;
+  border-radius: 12px;
+  border: 1px solid #1f2b3a;
+  background: #1f2b3a;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .primary-button:hover {
-  background-color: #d0d0d0;
+  background: #101826;
 }
 
-.secondary-button {
-  background-color: #627fce;
-  color: #ffffff;
+.text-button {
+  background: transparent;
+  border: none;
+  color: #1f2b3a;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 0.25rem;
 }
 
-.secondary-button:hover {
-  background-color: #4c6fce;
+.text-button:hover {
+  color: #0a0f18;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+
+  .auth-header h1 {
+    font-size: 1.6rem;
+  }
 }
 </style>
