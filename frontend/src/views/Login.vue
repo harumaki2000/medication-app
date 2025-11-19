@@ -29,7 +29,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+
+import apiClient from '../lib/apiClient';
 
 const router = useRouter();
 const email = ref('');
@@ -41,7 +42,7 @@ const login = async () => {
     params.append('username', email.value);
     params.append('password', password.value);
 
-    const response = await axios.post('http://127.0.0.1:8000/token', params);
+    const response = await apiClient.post('/token', params);
 
     localStorage.setItem('token', response.data.access_token);
     localStorage.setItem('user_id', response.data.user_id);

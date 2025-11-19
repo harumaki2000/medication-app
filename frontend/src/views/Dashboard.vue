@@ -65,8 +65,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
+
+import apiClient from '../lib/apiClient';
 
 interface MedicationTiming {
   timing_id: number;
@@ -98,8 +99,8 @@ const recordingTiming = ref<number | null>(null);
 const fetchTodayRecords = async (userId: string, token: string) => {
   const today = new Date().toISOString().split('T')[0];
 
-  const response = await axios.get(
-    `http://127.0.0.1:8000/users/${userId}/intake-records/?date=${today}`,
+  const response = await apiClient.get(
+    `/users/${userId}/intake-records/?date=${today}`,
     {
       headers: { Authorization: `Bearer ${token}` }
     }
@@ -123,7 +124,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await axios.get(`http://127.0.0.1:8000/users/${userId}/medications/`, {
+    const response = await apiClient.get(`/users/${userId}/medications/`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -152,8 +153,8 @@ const recordIntake = async (medicationId: number, timingId: number) => {
   recordingTiming.value = timingId;
 
   try {
-    await axios.post(
-      `http://127.0.0.1:8000/users/${userId}/intake-records/`,
+    await apiClient.post(
+      `/users/${userId}/intake-records/`,
       {
         medication_id: medicationId,
         timing_id: timingId
@@ -187,7 +188,7 @@ const deleteMedication = async (medicationId: number) => {
   }
 
   try {
-    await axios.delete(`http://127.0.0.1:8000/users/${userId}/medications/${medicationId}`, {
+    await apiClient.delete(`/users/${userId}/medications/${medicationId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     medications.value = medications.value.filter((med) => med.medication_id !== medicationId);

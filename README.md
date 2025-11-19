@@ -59,3 +59,23 @@ cd frontend
 npm install
 npm run dev
 ```
+
+### 本番環境向けの起動手順 (Docker Compose)
+1. backend/.env.example をコピーして環境変数を用意してください。
+
+```
+cp backend/.env.example backend/.env
+```
+
+2. `backend/.env` 内の `SECRET_KEY` や `DATABASE_URL`、`ALLOWED_ORIGINS` を本番環境に合わせて設定します。
+
+3. フロントエンドからアクセスするAPIのURLを変更したい場合は、`frontend/.env` に `VITE_API_BASE_URL` を設定してください。Caddyが同一オリジンでリバースプロキシする場合は未設定（空文字）のままで問題ありません。
+
+4. コンテナをビルド・起動します。
+
+```
+docker compose build
+docker compose up -d
+```
+
+フロントエンドはCaddyがポート80で配信し、APIリクエストは `ALLOWED_ORIGINS` で指定したホストからのアクセスのみ許可されます。

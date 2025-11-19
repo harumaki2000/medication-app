@@ -44,8 +44,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
+
+import apiClient from '../lib/apiClient';
 
 const router = useRouter();
 
@@ -74,7 +75,7 @@ const register = async () => {
   try {
     const validTimings = timings.value.filter(t => t !== '');
 
-    await axios.post(`http://127.0.0.1:8000/users/${userId}/medications/`, {
+    await apiClient.post(`/users/${userId}/medications/`, {
       name: name.value,
       dosage: dosage.value,
       memo: memo.value,
