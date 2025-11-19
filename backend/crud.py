@@ -1,14 +1,14 @@
 from sqlalchemy.orm import Session
-import models, schemas
+import models, schemas, auth
 
 # Create User
 def create_user(db: Session, user: schemas.UserCreate):
-  fake_hashed_password = user.password + "notreallyhashed"
+  hashed_password = auth.get_password_hash(user.password)
 
   db_user = models.User(
     email = user.email,
     username = user.username,
-    password_hash = fake_hashed_password
+    password_hash = hashed_password
   )
 
   db.add(db_user)
@@ -45,3 +45,6 @@ def create_medication(db: Session, medication: schemas.MedicationCreate, user_id
 
   db.refresh(db_medication)
   return db_medication
+
+def get_user_by_email(db: Session, email: str):
+  return db.query(models.User).filter(models.User.email == email).first()
