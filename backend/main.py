@@ -57,6 +57,25 @@ def read_medications(user_id: int, db: Session = Depends(get_db)):
   medications = crud.get_medications(db=db, user_id=user_id)
   return medications
 
+@app.post("/users/{user_id}/intake-records/", response_model=schemas.IntakeRecord)
+def create_intake_record_for_user(
+  user_id: int,
+  intake: schemas.IntakeRecordCreate,
+  db: Session = Depends(get_db)
+):
+  medication = db.query(models.Medication).filter(
+    models.Medication.medication_id == intake.medication_id,
+    models.Medication.user_id == user_id
+  ).first()
+
+  if not medication:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail="指定した薬が見つかりません"
+    )
+
+  return crud.create_intake_record(db=db, record=intake, user_id=user_id)
+
 # ログインAPI
 @app.post("/token", response_model=dict)
 def login_for_access_token(

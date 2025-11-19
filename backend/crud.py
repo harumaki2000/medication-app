@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from datetime import datetime
 import models, schemas, auth
 
 # Create User
@@ -45,6 +46,21 @@ def create_medication(db: Session, medication: schemas.MedicationCreate, user_id
 
   db.refresh(db_medication)
   return db_medication
+
+def create_intake_record(db: Session, record: schemas.IntakeRecordCreate, user_id: int):
+  taken_time = record.taken_at or datetime.utcnow()
+
+  db_record = models.IntakeRecord(
+    user_id = user_id,
+    medication_id = record.medication_id,
+    timing_id = record.timing_id,
+    taken_at = taken_time
+  )
+
+  db.add(db_record)
+  db.commit()
+  db.refresh(db_record)
+  return db_record
 
 def get_user_by_email(db: Session, email: str):
   return db.query(models.User).filter(models.User.email == email).first()
