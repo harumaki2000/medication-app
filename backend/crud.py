@@ -73,5 +73,9 @@ def get_intake_records(db: Session, user_id: int, target_date: Optional[date] = 
 
   return query.all()
 
+def get_today_intake_records(db: Session, user_id: int):
+  today = date.today()
+  return get_intake_records(db=db, user_id=user_id, target_date=today)
+
 def get_user_by_email(db: Session, email: str):
   return db.query(models.User).filter(models.User.email == email).first()
