@@ -100,6 +100,11 @@ def list_intake_records(
   )
   return records
 
+
+@app.get("/users/{user_id}/records/today", response_model=List[schemas.IntakeRecord])
+def list_today_records(user_id: int, db: Session = Depends(get_db)):
+  return crud.get_today_intake_records(db=db, user_id=user_id)
+
 # ログインAPI
 @app.post("/token", response_model=dict)
 def login_for_access_token(
