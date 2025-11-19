@@ -1,6 +1,7 @@
 import Dashboard from '../views/Dashboard.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
+import AddMedication from '../views/AddMedication.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -26,6 +27,11 @@ const router = createRouter({
       name: 'dashboard',
       component: Dashboard
     },
+    {
+      path: '/medications/add',
+      name: 'add-medication',
+      component: AddMedication
+    }
   ],
 })
 
