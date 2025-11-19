@@ -86,7 +86,7 @@ const fetchRecordedTimings = async (userId: string, token: string) => {
 
     recordedTimings.value = response.data
       .map((record: { timing_id: number | null }) => record.timing_id)
-      .filter((timingId): timingId is number => timingId !== null);
+      .filter((timingId: number | null): timingId is number => timingId !== null);
   } catch (error) {
     console.error(error);
   }
