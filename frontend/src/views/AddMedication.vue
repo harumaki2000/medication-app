@@ -25,7 +25,7 @@
         <div class="form-field">
           <span>通知時間</span>
           <div class="time-list">
-            <div v-for="(time, index) in timings" :key="index" class="time-row">
+            <div v-for="(_, index) in timings" :key="index" class="time-row">
               <input type="time" v-model="timings[index]" />
               <button v-if="timings.length > 1" type="button" class="icon-btn" @click="removeTimingField(index)">×</button>
             </div>
