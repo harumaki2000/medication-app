@@ -5,7 +5,7 @@
         <p class="section-label">毎日の服薬</p>
         <h2>服用中の薬一覧</h2>
         <p class="hero-description">
-          予定された服用時間を見ながら、次に飲む薬をすぐに確認できます。
+          今日の記録を確認しながら、次の服用に備えられます。
         </p>
       </div>
     </header>
@@ -13,7 +13,7 @@
     <section class="medication-board">
       <div v-if="medications.length === 0" class="empty-state">
         <p>まだ登録された薬がありません。</p>
-        <p>画面上部の「新規追加」から記録を始めましょう。</p>
+        <p>「服薬を追加する」から記録を始めましょう。</p>
       </div>
 
       <div v-else class="medication-grid">
@@ -30,23 +30,26 @@
               v-for="timing in med.timings"
               :key="timing.timing_id"
               type="button"
-              :class="['tag', 'timing-button', { recorded: recordedTimings.includes(timing.timing_id) }]"
-              :disabled="recordingTiming === timing.timing_id || recordedTimings.includes(timing.timing_id)"
+              :class="['tag', 'timing-button', { recorded: isTaken(med.medication_id, timing.timing_id) }]"
+              :disabled="recordingTiming === timing.timing_id || isTaken(med.medication_id, timing.timing_id)"
               @click="recordIntake(med.medication_id, timing.timing_id)"
             >
               <span>{{ timing.take_time }}</span>
               <small v-if="recordingTiming === timing.timing_id">記録中...</small>
-              <span v-else-if="recordedTimings.includes(timing.timing_id)" class="recorded-badge">
+              <small v-else-if="isTaken(med.medication_id, timing.timing_id)" class="recorded-badge">
                 <i class="ti ti-check"></i>
                 記録済み
-              </span>
+              </small>
             </button>
           </div>
         </article>
       </div>
     </section>
 
-    <button class="add-new-button" @click="addMedication">＋ 服薬を追加する</button>
+    <button class="add-new-button" @click="addMedication">
+      <i class="ti ti-plus"></i>
+      服薬を追加する
+    </button>
   </div>
 </template>
 
@@ -69,28 +72,36 @@ interface Medication {
   timings: MedicationTiming[];
 }
 
+interface IntakeRecord {
+  record_id: number;
+  user_id: number;
+  medication_id: number;
+  timing_id: number | null;
+  taken_at: string;
+}
+
 const router = useRouter();
 const medications = ref<Medication[]>([]);
-const recordedTimings = ref<number[]>([]);
+const todayRecords = ref<IntakeRecord[]>([]);
+const recordingTiming = ref<number | null>(null);
 
-const fetchRecordedTimings = async (userId: string, token: string) => {
+const fetchTodayRecords = async (userId: string, token: string) => {
   const today = new Date().toISOString().split('T')[0];
 
-  try {
-    const response = await axios.get(
-      `http://127.0.0.1:8000/users/${userId}/intake-records/?date=${today}`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    );
+  const response = await axios.get(
+    `http://127.0.0.1:8000/users/${userId}/intake-records/?date=${today}`,
+    {
+      headers: { Authorization: `Bearer ${token}` }
+    }
+  );
 
-    recordedTimings.value = response.data
-      .map((record: { timing_id: number | null }) => record.timing_id)
-      .filter((timingId: number | null): timingId is number => timingId !== null);
-  } catch (error) {
-    console.error(error);
-  }
+  todayRecords.value = response.data;
 };
+
+const isTaken = (medicationId: number, timingId: number) =>
+  todayRecords.value.some(
+    (record) => record.medication_id === medicationId && record.timing_id === timingId
+  );
 
 onMounted(async () => {
   const userId = localStorage.getItem('user_id');
@@ -107,14 +118,12 @@ onMounted(async () => {
     });
 
     medications.value = response.data;
-    await fetchRecordedTimings(userId, token);
+    await fetchTodayRecords(userId, token);
   } catch (error) {
     console.error(error);
     alert('データ取得失敗');
   }
 });
-
-const recordingTiming = ref<number | null>(null);
 
 const recordIntake = async (medicationId: number, timingId: number) => {
   const userId = localStorage.getItem('user_id');
@@ -123,6 +132,10 @@ const recordIntake = async (medicationId: number, timingId: number) => {
   if (!userId || !token) {
     alert('ログインが必要です');
     router.push('/login');
+    return;
+  }
+
+  if (!confirm('この時間の服薬を記録しますか？')) {
     return;
   }
 
@@ -139,10 +152,8 @@ const recordIntake = async (medicationId: number, timingId: number) => {
         headers: { Authorization: `Bearer ${token}` }
       }
     );
+    await fetchTodayRecords(userId, token);
     alert('飲んだ記録を保存しました');
-    if (!recordedTimings.value.includes(timingId)) {
-      recordedTimings.value = [...recordedTimings.value, timingId];
-    }
   } catch (error) {
     console.error(error);
     alert('記録を保存できませんでした');
@@ -258,7 +269,7 @@ const addMedication = () => {
 .timings {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.8rem;
 }
 
 .tag {
@@ -282,6 +293,11 @@ const addMedication = () => {
   min-width: 120px;
   min-height: 56px;
   justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.timing-button span {
+  font-size: 1rem;
 }
 
 .timing-button small {
@@ -293,15 +309,14 @@ const addMedication = () => {
 
 .timing-button:disabled {
   cursor: not-allowed;
-  opacity: 0.7;
-  background: #f2f2f2;
+  opacity: 0.75;
 }
 
 .timing-button.recorded {
-  background: linear-gradient(135deg, #1f6f41, #1a5c38);
-  color: #fff;
-  border-color: #0f3d23;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.35);
+  background: #f0f0f0;
+  color: #4c5566;
+  border-color: rgba(76, 93, 139, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(76, 93, 139, 0.3);
 }
 
 .recorded-badge {
@@ -313,7 +328,7 @@ const addMedication = () => {
   font-size: 0.65rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  width: 100%;
+  flex-direction: row;
 }
 
 .recorded-badge i {
@@ -331,17 +346,17 @@ const addMedication = () => {
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.add-new-button {
   background: #1f2f4f;
   color: #fff;
   box-shadow: 0 10px 22px rgba(31, 47, 79, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
 }
 
 .add-new-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 25px rgba(31, 47, 79, 0.25);
 }
 
 @media (max-width: 860px) {
@@ -349,7 +364,6 @@ const addMedication = () => {
     flex-direction: column;
     align-items: flex-start;
   }
-
 }
 
 @media (max-width: 640px) {
@@ -359,6 +373,10 @@ const addMedication = () => {
 
   .medication-board {
     padding: 1.5rem;
+  }
+
+  .timings {
+    gap: 0.5rem;
   }
 }
 </style>
