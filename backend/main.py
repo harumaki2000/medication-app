@@ -3,8 +3,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine
-from typing import List
-from datetime import timedelta
+from typing import List, Optional
+from datetime import timedelta, datetime
 
 import crud, models, schemas, auth
 
@@ -75,6 +75,30 @@ def create_intake_record_for_user(
     )
 
   return crud.create_intake_record(db=db, record=intake, user_id=user_id)
+
+
+@app.get("/users/{user_id}/intake-records/", response_model=List[schemas.IntakeRecord])
+def list_intake_records(
+  user_id: int,
+  date: Optional[str] = None,
+  db: Session = Depends(get_db)
+):
+  target_date = None
+  if date:
+    try:
+      target_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+      raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="日付は YYYY-MM-DD 形式で指定してください"
+      )
+
+  records = crud.get_intake_records(
+    db=db,
+    user_id=user_id,
+    target_date=target_date or datetime.utcnow().date()
+  )
+  return records
 
 # ログインAPI
 @app.post("/token", response_model=dict)

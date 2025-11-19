@@ -26,9 +26,21 @@
           <p class="memo" v-if="med.memo">{{ med.memo }}</p>
 
           <div class="timings">
-            <span v-for="timing in med.timings" :key="timing.timing_id" class="tag">
-              {{ timing.take_time }}
-            </span>
+            <button
+              v-for="timing in med.timings"
+              :key="timing.timing_id"
+              type="button"
+              :class="['tag', 'timing-button', { recorded: recordedTimings.includes(timing.timing_id) }]"
+              :disabled="recordingTiming === timing.timing_id || recordedTimings.includes(timing.timing_id)"
+              @click="recordIntake(med.medication_id, timing.timing_id)"
+            >
+              <span>{{ timing.take_time }}</span>
+              <small v-if="recordingTiming === timing.timing_id">記録中...</small>
+              <span v-else-if="recordedTimings.includes(timing.timing_id)" class="recorded-badge">
+                <i class="ti ti-check"></i>
+                記録済み
+              </span>
+            </button>
           </div>
         </article>
       </div>
@@ -59,6 +71,26 @@ interface Medication {
 
 const router = useRouter();
 const medications = ref<Medication[]>([]);
+const recordedTimings = ref<number[]>([]);
+
+const fetchRecordedTimings = async (userId: string, token: string) => {
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    const response = await axios.get(
+      `http://127.0.0.1:8000/users/${userId}/intake-records/?date=${today}`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+
+    recordedTimings.value = response.data
+      .map((record: { timing_id: number | null }) => record.timing_id)
+      .filter((timingId): timingId is number => timingId !== null);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 onMounted(async () => {
   const userId = localStorage.getItem('user_id');
@@ -75,14 +107,52 @@ onMounted(async () => {
     });
 
     medications.value = response.data;
+    await fetchRecordedTimings(userId, token);
   } catch (error) {
     console.error(error);
     alert('データ取得失敗');
   }
 });
 
+const recordingTiming = ref<number | null>(null);
+
+const recordIntake = async (medicationId: number, timingId: number) => {
+  const userId = localStorage.getItem('user_id');
+  const token = localStorage.getItem('token');
+
+  if (!userId || !token) {
+    alert('ログインが必要です');
+    router.push('/login');
+    return;
+  }
+
+  recordingTiming.value = timingId;
+
+  try {
+    await axios.post(
+      `http://127.0.0.1:8000/users/${userId}/intake-records/`,
+      {
+        medication_id: medicationId,
+        timing_id: timingId
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    alert('飲んだ記録を保存しました');
+    if (!recordedTimings.value.includes(timingId)) {
+      recordedTimings.value = [...recordedTimings.value, timingId];
+    }
+  } catch (error) {
+    console.error(error);
+    alert('記録を保存できませんでした');
+  } finally {
+    recordingTiming.value = null;
+  }
+};
+
 const addMedication = () => {
-  router.push('/medications/add')
+  router.push('/medications/add');
 };
 </script>
 
@@ -199,6 +269,55 @@ const addMedication = () => {
   color: #1f4da7;
   font-size: 0.8rem;
   border: 1px solid rgba(31, 77, 167, 0.2);
+}
+
+.timing-button {
+  border: 1px solid rgba(76, 93, 139, 0.4);
+  background: #fff;
+  color: #1f2b3a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
+  flex-direction: column;
+  cursor: pointer;
+  font-weight: 600;
+  min-width: 120px;
+  min-height: 56px;
+  justify-content: center;
+}
+
+.timing-button small {
+  display: block;
+  font-size: 0.65rem;
+  color: #4c4c4c;
+  margin-top: 0.15rem;
+}
+
+.timing-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  background: #f2f2f2;
+}
+
+.timing-button.recorded {
+  background: linear-gradient(135deg, #1f6f41, #1a5c38);
+  color: #fff;
+  border-color: #0f3d23;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.35);
+}
+
+.recorded-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-top: 0.15rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+.recorded-badge i {
+  font-size: 0.8rem;
 }
 
 .add-new-button {
