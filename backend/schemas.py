@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import time
+from datetime import time, datetime
 
 # 服薬時刻のスキーマ
 
@@ -31,6 +31,21 @@ class Medication(MedicationBase):
   medication_id: int
   user_id: int
   timings: List[MedicationTiming] = []
+
+  class Config:
+    from_attributes = True
+
+class IntakeRecordBase(BaseModel):
+  medication_id: int
+  timing_id: Optional[int] = None
+  taken_at: Optional[datetime] = None
+
+class IntakeRecordCreate(IntakeRecordBase):
+  pass
+
+class IntakeRecord(IntakeRecordBase):
+  record_id: int
+  user_id: int
 
   class Config:
     from_attributes = True
